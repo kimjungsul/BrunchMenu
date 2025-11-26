@@ -313,29 +313,14 @@ function startRandomSelection() {
         item.classList.remove('active', 'selected');
     });
 
-    let currentIndex = 0;
-    const speed = 100;
+    // 순차적 활성화 연출 제거 -> 바로 당첨 연출로 이동
+    selectFinalWinner(items);
     
-    const interval = setInterval(() => {
-        if (currentIndex > 0) {
-             items[currentIndex - 1].classList.remove('active');
-        } else if (currentIndex === 0 && items[items.length - 1].classList.contains('active')) {
-             items[items.length - 1].classList.remove('active');
-        }
-
-        if (currentIndex < items.length) {
-            items[currentIndex].classList.add('active');
-            currentIndex++;
-        } else {
-            clearInterval(interval);
-            items[items.length - 1].classList.remove('active');
-            
-            setTimeout(() => {
-                selectFinalWinner(items);
-                randomBtn.disabled = false;
-            }, 200);
-        }
-    }, speed);
+    // 버튼 활성화는 당첨 후 처리가 끝난 뒤에 해야 하므로
+    // selectFinalWinner 내부에서 처리하거나, 여기서 타임아웃으로 처리
+    setTimeout(() => {
+        randomBtn.disabled = false;
+    }, 3500); // 두구두구(3초) + 약간의 여유
 }
 
 function selectFinalWinner(items) {
@@ -345,16 +330,17 @@ function selectFinalWinner(items) {
     // 당첨된 데이터 찾기 (index로 매핑)
     const winnerData = currentRestaurants[randomIndex];
 
-    winnerItem.classList.add('selected');
-    winnerItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-    // [수정] 연출 모달 먼저 보여주고 -> 당첨 팝업
-    // 0.5초 딜레이 후 연출 시작
-    setTimeout(() => {
-        showDrumroll(() => {
+    // 두구두구 연출 보여주기 (3초)
+    showDrumroll(() => {
+        // 연출이 끝나면 스크롤 이동 및 당첨 표시
+        winnerItem.classList.add('selected');
+        winnerItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // 당첨 팝업 표시
+        setTimeout(() => {
             showWinnerModal(winnerData);
-        });
-    }, 500);
+        }, 500);
+    });
 }
 
 function showWinnerModal(winnerData) {
