@@ -12,7 +12,10 @@
         <header>
             <h1>🍽️ 오늘 뭐 먹지?</h1>
             <p>카테고리를 선택하고 랜덤 추천을 받아보세요!</p>
-            <button class="saved-list-btn" onclick="openSavedList()">📂 저장 목록</button>
+            <div style="position: absolute; top: 0; right: 0; display: flex; gap: 5px;">
+                <button class="header-btn" onclick="openHiddenList()">🚫 제외 목록</button>
+                <button class="header-btn" onclick="openSavedList()">📂 저장 목록</button>
+            </div>
         </header>
 
         <!-- 카테고리 버튼 영역 -->
@@ -51,6 +54,18 @@
                 <!-- 저장된 목록이 여기에 표시됨 -->
             </ul>
             <button class="close-btn" onclick="closeSavedList()">닫기</button>
+        </div>
+    </div>
+
+    <!-- [NEW] 제외 목록 모달 -->
+    <div id="hidden-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>🚫 제외된 맛집 리스트</h2>
+            <p style="font-size:0.8rem; color:#888; margin-bottom:10px;">이 식당들은 추천 리스트에 나오지 않습니다.</p>
+            <ul id="hidden-list" class="grid-list" style="margin-top:15px; display:block;">
+                <!-- 제외된 목록이 여기에 표시됨 -->
+            </ul>
+            <button class="close-btn" onclick="closeHiddenList()">닫기</button>
         </div>
     </div>
 

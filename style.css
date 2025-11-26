@@ -48,11 +48,8 @@ header p {
     font-size: 0.9rem;
 }
 
-/* 저장 목록 버튼 (우측 상단) */
-.saved-list-btn {
-    position: absolute;
-    top: 0;
-    right: 0;
+/* 헤더 버튼 (저장/제외 목록) */
+.header-btn {
     background: none;
     border: 1px solid #ddd;
     padding: 5px 10px;
@@ -60,8 +57,9 @@ header p {
     color: #555;
     border-radius: 15px;
     cursor: pointer;
+    transition: background-color 0.2s;
 }
-.saved-list-btn:hover {
+.header-btn:hover {
     background-color: #f8f9fa;
 }
 
@@ -152,6 +150,12 @@ button:active {
     position: relative;
 }
 
+/* 저장된 아이템 강조 스타일 */
+.restaurant-item.saved-item {
+    border-color: #ffd43b;
+    background-color: #fff9db;
+}
+
 .restaurant-name {
     font-size: 1rem;
     font-weight: bold;
@@ -207,6 +211,15 @@ button:active {
 }
 .save-btn:hover {
     background-color: #fcc419;
+}
+
+.hide-btn {
+    background-color: #ff8787;
+    color: white;
+    max-width: 60px; /* 제외 버튼은 조금 작게 */
+}
+.hide-btn:hover {
+    background-color: #fa5252;
 }
 
 /* 반짝이는 효과 (Active 상태) */
@@ -364,6 +377,10 @@ button:active {
     .action-btn {
         padding: 6px 10px;
         font-size: 0.75rem;
+    }
+
+    .hide-btn {
+        max-width: none; /* 모바일에서는 꽉 차게 */
     }
 
     /* 당첨 팝업 */

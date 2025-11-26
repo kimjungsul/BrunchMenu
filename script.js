@@ -6,7 +6,7 @@ const KAKAO_API_KEY = 'f3007cbf6c053329c9f18df03c2b30e7';
 
 let currentRestaurants = [];
 
-// 위치 정보 캐싱 변수 (모바일 속도 개선용)
+// 위치 정보 캐싱 변수
 let cachedLat = null;
 let cachedLng = null;
 
@@ -19,7 +19,7 @@ const categoryKeywords = {
 };
 
 function loadRestaurants(category) {
-    // API 키 체크 (공백 제거 등 안전장치)
+    // API 키 체크
     if (!KAKAO_API_KEY || KAKAO_API_KEY.includes('여기에')) {
         alert('script.js 파일을 열어서 [KAKAO_API_KEY] 변수에 키를 먼저 입력해주세요!');
         return;
@@ -36,10 +36,10 @@ function loadRestaurants(category) {
     loadingEl.classList.remove('hidden');
     listEl.innerHTML = '';
 
-    // [수정] 이미 위치 정보가 있으면 바로 API 호출 (속도 개선)
+    // 캐시된 위치가 있으면 바로 호출
     if (cachedLat && cachedLng) {
         console.log("캐시된 위치 사용:", cachedLat, cachedLng);
-        searchPlacesWithSDK(cachedLat, cachedLng, categoryKeywords[category]);
+        searchPlacesWithSDK(cachedLat, cachedLng, categoryKeywords[category], category);
         return;
     }
 
@@ -56,28 +56,24 @@ function loadRestaurants(category) {
             cachedLng = position.coords.longitude;
             console.log("새로운 위치 갱신:", cachedLat, cachedLng);
             
-            // 카카오 SDK 검색 호출
-            searchPlacesWithSDK(cachedLat, cachedLng, categoryKeywords[category]);
+            searchPlacesWithSDK(cachedLat, cachedLng, categoryKeywords[category], category);
         },
         (error) => {
             console.error(error);
             alert('위치 권한이 필요합니다. 브라우저 설정에서 위치 권한을 허용해주세요.');
             loadingEl.classList.add('hidden');
         },
-        // [옵션 추가] 정확도 보다는 속도 우선, 캐시된 위치 사용 가능 시간 설정
         { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
     );
 }
 
-function searchPlacesWithSDK(lat, lng, keyword) {
-    // 이미 SDK가 로드되어 있는지 확인
+function searchPlacesWithSDK(lat, lng, keyword, categoryName) {
     if (!window.kakao || !window.kakao.maps) {
         const script = document.createElement('script');
-        // autoload=false 파라미터 중요
         script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_API_KEY}&libraries=services&autoload=false`;
         script.onload = () => {
             kakao.maps.load(() => {
-                executeSearch(lat, lng, keyword);
+                executeSearch(lat, lng, keyword, categoryName);
             });
         };
         script.onerror = () => {
@@ -86,39 +82,40 @@ function searchPlacesWithSDK(lat, lng, keyword) {
         };
         document.head.appendChild(script);
     } else {
-        executeSearch(lat, lng, keyword);
+        executeSearch(lat, lng, keyword, categoryName);
     }
 }
 
-function executeSearch(lat, lng, keyword) {
+function executeSearch(lat, lng, keyword, categoryName) {
     const ps = new kakao.maps.services.Places();
     const loadingEl = document.getElementById('loading');
     const randomBtn = document.getElementById('random-btn');
 
     const options = {
         location: new kakao.maps.LatLng(lat, lng),
-        radius: 1000, // 1km 반경
+        radius: 1000, 
         sort: kakao.maps.services.SortBy.DISTANCE,
-        size: 15 // 최대 개수(15)로 가져와서 섞음
+        size: 15 
     };
 
     ps.keywordSearch(keyword, (data, status, pagination) => {
         loadingEl.classList.add('hidden');
 
         if (status === kakao.maps.services.Status.OK) {
-            // [수정] 데이터를 랜덤하게 섞은 후 상위 10개만 선택
-            const shuffledData = data.sort(() => 0.5 - Math.random());
-            const selectedData = shuffledData.slice(0, 10);
-
-            currentRestaurants = selectedData.map(place => ({
-                id: place.id, // 고유 ID 저장
+            // 1. API 결과 변환
+            let apiRestaurants = data.map(place => ({
+                id: place.id,
                 name: place.place_name,
-                category: place.category_name.split('>').pop().trim(),
+                category: categoryName, // 현재 선택한 카테고리명 사용
                 distance: place.distance + 'm',
                 address: place.road_address_name || place.address_name,
                 url: place.place_url
             }));
 
+            // 2. 데이터 병합 및 필터링 (핵심 로직)
+            currentRestaurants = mergeAndFilterData(apiRestaurants, categoryName);
+
+            // 3. 화면 표시
             displayRestaurants(currentRestaurants);
             
             if (currentRestaurants.length > 0) {
@@ -126,30 +123,86 @@ function executeSearch(lat, lng, keyword) {
             }
 
         } else if (status === kakao.maps.services.Status.ZERO_RESULT) {
-            displayRestaurants([]);
-            alert('주변 1km 내에 해당 메뉴의 음식점이 없어요 ㅠㅠ');
+            // 검색 결과가 없어도 저장된 식당은 보여줘야 함
+            currentRestaurants = mergeAndFilterData([], categoryName);
+            displayRestaurants(currentRestaurants);
+            
+            if (currentRestaurants.length > 0) {
+                randomBtn.classList.remove('hidden');
+            } else {
+                alert('주변 1km 내에 해당 메뉴의 음식점이 없고, 저장된 식당도 없습니다 ㅠㅠ');
+            }
         } else {
             alert('검색 중 오류가 발생했습니다.');
         }
     }, options);
 }
 
+// [NEW] 데이터 병합 및 필터링 로직
+function mergeAndFilterData(apiData, categoryName) {
+    const savedList = JSON.parse(localStorage.getItem('myRestaurants')) || [];
+    const hiddenList = JSON.parse(localStorage.getItem('hiddenRestaurants')) || [];
+
+    // 1. 제외 목록(Hidden)에 있는 식당 ID 추출
+    const hiddenIds = new Set(hiddenList.map(item => item.id));
+
+    // 2. API 데이터에서 제외된 식당 필터링
+    let filteredApiData = apiData.filter(item => !hiddenIds.has(item.id));
+
+    // 3. 저장된 식당 중 현재 카테고리와 맞는 것 가져오기 (제외된 것은 뺌)
+    // 저장된 식당은 무조건 리스트 상단에 배치하거나 포함시켜야 함
+    const savedInThisCategory = savedList.filter(item => 
+        item.category === categoryName && !hiddenIds.has(item.id)
+    );
+
+    // 4. API 데이터 랜덤 섞기
+    filteredApiData = filteredApiData.sort(() => 0.5 - Math.random());
+
+    // 5. 중복 제거를 위해 Map 사용
+    const finalMap = new Map();
+
+    // 5-1. 저장된 식당 먼저 넣기 (우선순위)
+    savedInThisCategory.forEach(item => finalMap.set(item.id, item));
+
+    // 5-2. API 식당 채워넣기 (최대 15개까지)
+    for (const item of filteredApiData) {
+        if (finalMap.size >= 15) break;
+        if (!finalMap.has(item.id)) {
+            finalMap.set(item.id, item);
+        }
+    }
+
+    // Map -> Array 변환
+    return Array.from(finalMap.values());
+}
+
 function displayRestaurants(restaurants) {
     const resultContainer = document.getElementById('result-container');
     const listEl = document.getElementById('restaurant-list');
+    const savedList = JSON.parse(localStorage.getItem('myRestaurants')) || [];
+    const savedIds = new Set(savedList.map(p => p.id));
 
     if (restaurants.length === 0) {
-        listEl.innerHTML = '<li class="restaurant-item">검색 결과가 없습니다.</li>';
+        listEl.innerHTML = '<li class="restaurant-item">표시할 식당이 없습니다.</li>';
     } else {
         restaurants.forEach((place, index) => {
             const li = document.createElement('li');
             li.className = 'restaurant-item';
+            if (savedIds.has(place.id)) {
+                li.classList.add('saved-item'); // 저장된 아이템 스타일용 클래스
+            }
             li.id = `item-${index}`;
             
-            // HTML 구성 (CSS Flex 구조에 맞게 변경)
+            const isSaved = savedIds.has(place.id);
+            const saveBtnText = isSaved ? "저장됨" : "저장";
+            const saveBtnColor = isSaved ? "#ffd43b" : ""; // 노란색
+
             li.innerHTML = `
                 <div class="restaurant-info" style="flex:1; width:100%;">
-                    <div class="restaurant-name">${place.name}</div>
+                    <div class="restaurant-name">
+                        ${place.name} 
+                        ${isSaved ? '<span style="font-size:0.8rem; color:#fcc419;">⭐</span>' : ''}
+                    </div>
                     <div class="restaurant-meta">
                         <span>${place.category}</span> | 
                         <span>${place.distance}</span>
@@ -159,7 +212,8 @@ function displayRestaurants(restaurants) {
                 
                 <div class="btn-group">
                     <a href="${place.url}" target="_blank" class="action-btn map-btn">지도</a>
-                    <button class="action-btn save-btn" onclick="saveRestaurant('${place.id}')">저장</button>
+                    <button class="action-btn save-btn" style="background-color:${saveBtnColor}" onclick="toggleSave('${place.id}')">${saveBtnText}</button>
+                    <button class="action-btn hide-btn" onclick="hideRestaurant('${place.id}')">🚫 제외</button>
                 </div>
             `;
             listEl.appendChild(li);
@@ -170,129 +224,142 @@ function displayRestaurants(restaurants) {
 }
 
 // =======================
-// 카테고리 랜덤 추첨 기능
+// 저장/제외 기능
 // =======================
-function pickRandomCategory() {
-    const categories = ["한식", "중식", "일식", "양식"];
-    const buttons = {
-        "한식": document.getElementById('btn-korean'),
-        "중식": document.getElementById('btn-chinese'),
-        "일식": document.getElementById('btn-japanese'),
-        "양식": document.getElementById('btn-western')
-    };
-    
-    const randomBtn = document.getElementById('btn-random-cat');
-    if (randomBtn) randomBtn.disabled = true;
 
-    let count = 0;
-    const maxCount = 15; // 15번 깜빡임
-    const speed = 100;
-
-    // 애니메이션
-    const interval = setInterval(() => {
-        // 모든 버튼 스타일 초기화
-        Object.values(buttons).forEach(btn => {
-            btn.style.transform = "scale(1)";
-            btn.style.boxShadow = "none";
-            btn.style.backgroundColor = "#007bff";
-        });
-
-        const randomCat = categories[Math.floor(Math.random() * categories.length)];
-        const targetBtn = buttons[randomCat];
-
-        // 하이라이트 효과
-        targetBtn.style.transform = "scale(1.1)";
-        targetBtn.style.backgroundColor = "#ff6b6b";
-        targetBtn.style.boxShadow = "0 0 15px rgba(255, 107, 107, 0.6)";
-
-        count++;
-
-        if (count >= maxCount) {
-            clearInterval(interval);
-            if (randomBtn) randomBtn.disabled = false;
-            
-            // 최종 선택된 카테고리로 로딩 실행
-            setTimeout(() => {
-               loadRestaurants(randomCat); 
-            }, 300);
-        }
-    }, speed);
-}
-
-// =======================
-// 저장 기능 (LocalStorage)
-// =======================
-function saveRestaurant(placeId) {
+// [수정] 저장 토글 기능 (저장 <-> 해제)
+function toggleSave(placeId) {
     const place = currentRestaurants.find(p => p.id === placeId);
-    if (!place) return;
+    if (!place) return; // 리스트에 없으면 패스
 
     let savedList = JSON.parse(localStorage.getItem('myRestaurants')) || [];
-    
-    // 중복 체크
-    if (savedList.some(saved => saved.id === place.id)) {
-        alert('이미 저장된 맛집입니다!');
-        return;
-    }
+    const existingIndex = savedList.findIndex(p => p.id === placeId);
 
-    savedList.push(place);
+    if (existingIndex >= 0) {
+        // 이미 있으면 삭제 (저장 취소)
+        savedList.splice(existingIndex, 1);
+        alert('저장이 취소되었습니다.');
+    } else {
+        // 없으면 추가
+        savedList.push(place);
+        alert(`"${place.name}" 저장 완료!`);
+    }
+    
     localStorage.setItem('myRestaurants', JSON.stringify(savedList));
-    alert(`"${place.name}" 저장 완료!`);
+    
+    // 화면 갱신 (스타일 업데이트)
+    displayRestaurants(currentRestaurants);
 }
 
+// [NEW] 식당 숨기기 (제외)
+function hideRestaurant(placeId) {
+    const place = currentRestaurants.find(p => p.id === placeId);
+    if (!place && !confirm("목록에서 제외하시겠습니까?")) return;
+
+    let hiddenList = JSON.parse(localStorage.getItem('hiddenRestaurants')) || [];
+    
+    // 중복 체크
+    if (!hiddenList.some(h => h.id === placeId)) {
+        hiddenList.push(place);
+        localStorage.setItem('hiddenRestaurants', JSON.stringify(hiddenList));
+    }
+
+    // 현재 리스트에서 즉시 제거하고 화면 갱신
+    currentRestaurants = currentRestaurants.filter(p => p.id !== placeId);
+    displayRestaurants(currentRestaurants);
+}
+
+// 저장 목록 팝업
 function openSavedList() {
     const modal = document.getElementById('saved-modal');
     const listEl = document.getElementById('saved-list');
     const savedList = JSON.parse(localStorage.getItem('myRestaurants')) || [];
 
-    listEl.innerHTML = '';
+    renderSimpleList(listEl, savedList, 'saved');
     modal.classList.remove('hidden');
-
-    if (savedList.length === 0) {
-        listEl.innerHTML = '<li style="padding:20px;">아직 저장된 맛집이 없습니다.</li>';
-    } else {
-        savedList.forEach((place) => {
-            const li = document.createElement('li');
-            li.className = 'restaurant-item'; // 스타일 재사용
-            li.style.marginBottom = '10px';
-            li.innerHTML = `
-                <div class="restaurant-name">${place.name}</div>
-                <div class="restaurant-address">${place.address}</div>
-                <div class="btn-group">
-                    <a href="${place.url}" target="_blank" class="action-btn map-btn">지도</a>
-                    <button class="action-btn" style="background:#ff6b6b; color:white;" onclick="removeSaved('${place.id}')">삭제</button>
-                </div>
-            `;
-            listEl.appendChild(li);
-        });
-    }
 }
 
-function removeSaved(placeId) {
+// [NEW] 제외 목록 팝업
+function openHiddenList() {
+    const modal = document.getElementById('hidden-modal');
+    const listEl = document.getElementById('hidden-list');
+    const hiddenList = JSON.parse(localStorage.getItem('hiddenRestaurants')) || [];
+
+    renderSimpleList(listEl, hiddenList, 'hidden');
+    modal.classList.remove('hidden');
+}
+
+// 팝업 내부 리스트 렌더링 (재사용)
+function renderSimpleList(container, list, type) {
+    container.innerHTML = '';
+    if (list.length === 0) {
+        container.innerHTML = '<li style="padding:20px;">목록이 비어있습니다.</li>';
+        return;
+    }
+
+    list.forEach((place) => {
+        const li = document.createElement('li');
+        li.className = 'restaurant-item'; 
+        li.style.marginBottom = '10px';
+        
+        let btnHtml = '';
+        if (type === 'saved') {
+            btnHtml = `<button class="action-btn" style="background:#ff6b6b; color:white;" onclick="removeFromSaved('${place.id}')">삭제</button>`;
+        } else {
+            btnHtml = `<button class="action-btn" style="background:#51cf66; color:white;" onclick="restoreHidden('${place.id}')">복구</button>`;
+        }
+
+        li.innerHTML = `
+            <div class="restaurant-name">${place.name}</div>
+            <div class="restaurant-address">${place.address}</div>
+            <div class="btn-group">
+                <a href="${place.url}" target="_blank" class="action-btn map-btn">지도</a>
+                ${btnHtml}
+            </div>
+        `;
+        container.appendChild(li);
+    });
+}
+
+// 저장 목록에서 제거
+function removeFromSaved(placeId) {
     let savedList = JSON.parse(localStorage.getItem('myRestaurants')) || [];
     savedList = savedList.filter(p => p.id !== placeId);
     localStorage.setItem('myRestaurants', JSON.stringify(savedList));
-    openSavedList(); // 리스트 새로고침
+    openSavedList(); // 리스트 갱신
+    
+    // 현재 화면에 떠있는 리스트에도 반영 (저장 마크 제거 등)
+    displayRestaurants(currentRestaurants);
+}
+
+// 제외 목록에서 복구
+function restoreHidden(placeId) {
+    let hiddenList = JSON.parse(localStorage.getItem('hiddenRestaurants')) || [];
+    hiddenList = hiddenList.filter(p => p.id !== placeId);
+    localStorage.setItem('hiddenRestaurants', JSON.stringify(hiddenList));
+    openHiddenList(); // 리스트 갱신
+    
+    // 주의: 현재 화면(currentRestaurants)에는 API를 다시 부르기 전까지는 추가되지 않음
 }
 
 function closeSavedList() {
     document.getElementById('saved-modal').classList.add('hidden');
 }
 
+function closeHiddenList() {
+    document.getElementById('hidden-modal').classList.add('hidden');
+}
+
 // =======================
-// 당첨 팝업 관련 기능
+// 팝업 및 연출 닫기
 // =======================
 function closeWinnerModal() {
     document.getElementById('winner-modal').classList.add('hidden');
 }
 
-// =======================
-// 연출용 모달 (두구두구)
-// =======================
 function showDrumroll(callback) {
     const modal = document.getElementById('drumroll-modal');
     modal.classList.remove('hidden');
-    
-    // 3초 후 자동으로 닫히고 콜백 실행
     setTimeout(() => {
         modal.classList.add('hidden');
         if (callback) callback();
@@ -300,7 +367,7 @@ function showDrumroll(callback) {
 }
 
 // =======================
-// 랜덤 추첨 기능
+// 랜덤 추첨
 // =======================
 function startRandomSelection() {
     const items = document.querySelectorAll('#restaurant-list .restaurant-item');
@@ -313,30 +380,21 @@ function startRandomSelection() {
         item.classList.remove('active', 'selected');
     });
 
-    // 순차적 활성화 연출 제거 -> 바로 당첨 연출로 이동
     selectFinalWinner(items);
     
-    // 버튼 활성화는 당첨 후 처리가 끝난 뒤에 해야 하므로
-    // selectFinalWinner 내부에서 처리하거나, 여기서 타임아웃으로 처리
     setTimeout(() => {
         randomBtn.disabled = false;
-    }, 3500); // 두구두구(3초) + 약간의 여유
+    }, 3500);
 }
 
 function selectFinalWinner(items) {
     const randomIndex = Math.floor(Math.random() * items.length);
     const winnerItem = items[randomIndex];
-    
-    // 당첨된 데이터 찾기 (index로 매핑)
     const winnerData = currentRestaurants[randomIndex];
 
-    // 두구두구 연출 보여주기 (3초)
     showDrumroll(() => {
-        // 연출이 끝나면 스크롤 이동 및 당첨 표시
         winnerItem.classList.add('selected');
         winnerItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        
-        // 당첨 팝업 표시
         setTimeout(() => {
             showWinnerModal(winnerData);
         }, 500);
@@ -345,11 +403,8 @@ function selectFinalWinner(items) {
 
 function showWinnerModal(winnerData) {
     const modal = document.getElementById('winner-modal');
-    
-    // 팝업 내용 채우기
     document.getElementById('winner-name').textContent = winnerData.name;
     document.getElementById('winner-address').textContent = winnerData.address;
     document.getElementById('winner-map-btn').href = winnerData.url;
-    
     modal.classList.remove('hidden');
 }
