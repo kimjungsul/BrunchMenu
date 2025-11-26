@@ -53,6 +53,27 @@
         </div>
     </div>
 
+    <!-- [NEW] 최종 선택 결과 팝업 -->
+    <div id="winner-modal" class="modal hidden">
+        <div class="modal-content winner-content">
+            <h2 style="color:#ff6b6b; margin-bottom:10px;">🎉 당첨! 🎉</h2>
+            <p id="winner-message" style="font-size:1.2rem; font-weight:bold; margin-bottom:20px;">
+                유탁아 고민그만하고<br>여기로 가자 제발!!!
+            </p>
+            
+            <div id="winner-info" style="background:#f8f9fa; padding:15px; border-radius:10px; margin-bottom:20px;">
+                <!-- 당첨된 식당 정보가 들어갑니다 -->
+                <h3 id="winner-name" style="margin-bottom:5px;">식당 이름</h3>
+                <p id="winner-address" style="color:#666; font-size:0.9rem;">주소</p>
+            </div>
+
+            <div class="btn-group" style="justify-content: center; gap: 10px;">
+                <a id="winner-map-btn" href="#" target="_blank" class="action-btn map-btn" style="padding:12px; font-size:1rem; flex:1;">🗺️ 지도보기</a>
+                <button class="action-btn" style="padding:12px; font-size:1rem; background-color:#007bff; color:white; flex:1;" onclick="closeWinnerModal()">🔄 다시 선택하기</button>
+            </div>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>

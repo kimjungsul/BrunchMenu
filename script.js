@@ -207,7 +207,14 @@ function closeSavedList() {
 }
 
 // =======================
-// 랜덤 추첨 기능 (기존 유지)
+// 당첨 팝업 관련 기능
+// =======================
+function closeWinnerModal() {
+    document.getElementById('winner-modal').classList.add('hidden');
+}
+
+// =======================
+// 랜덤 추첨 기능
 // =======================
 function startRandomSelection() {
     const items = document.querySelectorAll('#restaurant-list .restaurant-item');
@@ -247,8 +254,27 @@ function startRandomSelection() {
 
 function selectFinalWinner(items) {
     const randomIndex = Math.floor(Math.random() * items.length);
-    const winner = items[randomIndex];
+    const winnerItem = items[randomIndex];
     
-    winner.classList.add('selected');
-    winner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // 당첨된 데이터 찾기 (index로 매핑)
+    const winnerData = currentRestaurants[randomIndex];
+
+    winnerItem.classList.add('selected');
+    winnerItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    // 0.5초 뒤에 팝업 띄우기
+    setTimeout(() => {
+        showWinnerModal(winnerData);
+    }, 500);
+}
+
+function showWinnerModal(winnerData) {
+    const modal = document.getElementById('winner-modal');
+    
+    // 팝업 내용 채우기
+    document.getElementById('winner-name').textContent = winnerData.name;
+    document.getElementById('winner-address').textContent = winnerData.address;
+    document.getElementById('winner-map-btn').href = winnerData.url;
+    
+    modal.classList.remove('hidden');
 }
