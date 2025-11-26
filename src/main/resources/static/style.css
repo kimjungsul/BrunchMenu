@@ -1,0 +1,257 @@
+/* 기본 스타일 초기화 */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+}
+
+body {
+    background-color: #eef2f5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    background-color: white;
+    width: 100%;
+    max-width: 600px;
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    height: 90vh; /* 화면 꽉 차게 */
+    position: relative;
+}
+
+header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+header h1 {
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+
+header p {
+    color: #888;
+    margin-bottom: 1.5rem;
+}
+
+/* 저장 목록 버튼 (우측 상단) */
+.saved-list-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: none;
+    border: 1px solid #ddd;
+    padding: 5px 10px;
+    font-size: 0.9rem;
+    color: #555;
+    border-radius: 15px;
+    cursor: pointer;
+}
+.saved-list-btn:hover {
+    background-color: #f8f9fa;
+}
+
+/* 카테고리 버튼 영역 */
+.category-buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+button {
+    background-color: #007bff; /* 파란색 버튼 */
+    color: white;
+    border: none;
+    padding: 12px;
+    font-size: 1rem;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: bold;
+    box-shadow: 0 4px 6px rgba(0, 123, 255, 0.2);
+}
+
+button:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+/* 로딩 및 결과 영역 */
+.hidden {
+    display: none !important;
+}
+
+#result-container {
+    flex-grow: 1; /* 남은 공간 차지 */
+    overflow-y: auto; /* 스크롤 가능하게 */
+    margin-bottom: 20px;
+    padding-right: 5px; /* 스크롤바 공간 */
+}
+
+/* 스크롤바 스타일 */
+#result-container::-webkit-scrollbar {
+    width: 8px;
+}
+#result-container::-webkit-scrollbar-thumb {
+    background-color: #ccc;
+    border-radius: 4px;
+}
+
+.grid-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 2열 그리드 */
+    gap: 10px;
+    padding: 5px;
+}
+
+.restaurant-item {
+    list-style: none;
+    background-color: white;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s ease;
+    min-height: 140px;
+    position: relative;
+}
+
+.restaurant-name {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 5px;
+    word-break: keep-all;
+}
+
+.restaurant-meta {
+    font-size: 0.8rem;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.restaurant-address {
+    font-size: 0.75rem;
+    color: #999;
+    margin-bottom: 10px;
+    word-break: break-all;
+}
+
+.btn-group {
+    display: flex;
+    gap: 5px;
+    width: 100%;
+}
+
+.action-btn {
+    flex: 1;
+    padding: 5px;
+    font-size: 0.8rem;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+}
+
+.map-btn {
+    background-color: #e9ecef;
+    color: #495057;
+    text-decoration: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.save-btn {
+    background-color: #ffd43b;
+    color: #333;
+}
+.save-btn:hover {
+    background-color: #fcc419;
+}
+
+/* 반짝이는 효과 (Active 상태) */
+.restaurant-item.active {
+    background-color: #e7f5ff;
+    border-color: #007bff;
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(0, 123, 255, 0.5);
+    z-index: 5;
+}
+
+/* 최종 선택된 상태 */
+.restaurant-item.selected {
+    background-color: #007bff;
+    color: white;
+    border-color: #0056b3;
+    transform: scale(1.1);
+    box-shadow: 0 0 20px rgba(0, 123, 255, 0.7);
+    z-index: 10;
+}
+
+.restaurant-item.selected .restaurant-name,
+.restaurant-item.selected .restaurant-meta,
+.restaurant-item.selected .restaurant-address {
+    color: white;
+}
+
+/* 하단 랜덤 버튼 영역 */
+.random-section {
+    margin-top: auto;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+}
+
+.random-btn {
+    width: 100%;
+    padding: 15px;
+    font-size: 1.2rem;
+    background-color: #007bff;
+}
+
+/* 모달 창 스타일 */
+.modal {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 400px;
+    max-height: 80vh;
+    overflow-y: auto;
+    text-align: center;
+}
+
+.close-btn {
+    background-color: #868e96;
+    margin-top: 15px;
+}

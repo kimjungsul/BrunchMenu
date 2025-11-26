@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>오늘의 점심 메뉴</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>🍽️ 오늘 뭐 먹지?</h1>
+            <p>카테고리를 선택하고 랜덤 추천을 받아보세요!</p>
+            <button class="saved-list-btn" onclick="openSavedList()">📂 저장 목록</button>
+        </header>
+
+        <!-- 카테고리 버튼 영역 -->
+        <div class="category-buttons">
+            <button onclick="loadRestaurants('한식')">한식</button>
+            <button onclick="loadRestaurants('중식')">중식</button>
+            <button onclick="loadRestaurants('양식')">양식</button>
+            <button onclick="loadRestaurants('일식')">일식</button>
+        </div>
+
+        <div id="loading" class="hidden">
+            맛집 정보를 불러오는 중입니다...
+        </div>
+
+        <!-- 음식점 리스트 영역 -->
+        <div id="result-container" class="hidden">
+            <ul id="restaurant-list" class="grid-list">
+                <!-- 결과가 여기에 박스 형태로 표시됩니다 -->
+            </ul>
+        </div>
+
+        <!-- 랜덤 선택 버튼 (화면 하단) -->
+        <div class="random-section">
+            <button id="random-btn" class="random-btn hidden" onclick="startRandomSelection()">
+                🎲 랜덤 선택 시작!
+            </button>
+        </div>
+    </div>
+
+    <!-- 저장 목록 모달 -->
+    <div id="saved-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>⭐ 내 맛집 리스트</h2>
+            <ul id="saved-list" class="grid-list" style="margin-top:15px; display:block;">
+                <!-- 저장된 목록이 여기에 표시됨 -->
+            </ul>
+            <button class="close-btn" onclick="closeSavedList()">닫기</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
