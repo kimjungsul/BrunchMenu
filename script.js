@@ -6,6 +6,10 @@ const KAKAO_API_KEY = 'f3007cbf6c053329c9f18df03c2b30e7';
 
 let currentRestaurants = [];
 
+// 위치 정보 캐싱 변수 (모바일 속도 개선용)
+let cachedLat = null;
+let cachedLng = null;
+
 // 카테고리별 검색 키워드 매핑
 const categoryKeywords = {
     "한식": "한식",
@@ -32,24 +36,36 @@ function loadRestaurants(category) {
     loadingEl.classList.remove('hidden');
     listEl.innerHTML = '';
 
+    // [수정] 이미 위치 정보가 있으면 바로 API 호출 (속도 개선)
+    if (cachedLat && cachedLng) {
+        console.log("캐시된 위치 사용:", cachedLat, cachedLng);
+        searchPlacesWithSDK(cachedLat, cachedLng, categoryKeywords[category]);
+        return;
+    }
+
     if (!navigator.geolocation) {
         alert('위치 정보를 지원하지 않는 브라우저입니다.');
         loadingEl.classList.add('hidden');
         return;
     }
 
+    // 위치 정보가 없으면 새로 요청
     navigator.geolocation.getCurrentPosition(
         (position) => {
-            const lat = position.coords.latitude;
-            const lng = position.coords.longitude;
+            cachedLat = position.coords.latitude;
+            cachedLng = position.coords.longitude;
+            console.log("새로운 위치 갱신:", cachedLat, cachedLng);
+            
             // 카카오 SDK 검색 호출
-            searchPlacesWithSDK(lat, lng, categoryKeywords[category]);
+            searchPlacesWithSDK(cachedLat, cachedLng, categoryKeywords[category]);
         },
         (error) => {
             console.error(error);
             alert('위치 권한이 필요합니다. 브라우저 설정에서 위치 권한을 허용해주세요.');
             loadingEl.classList.add('hidden');
-        }
+        },
+        // [옵션 추가] 정확도 보다는 속도 우선, 캐시된 위치 사용 가능 시간 설정
+        { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
     );
 }
 
