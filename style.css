@@ -39,11 +39,13 @@ header {
 header h1 {
     color: #333;
     margin-bottom: 0.5rem;
+    font-size: 1.5rem; /* 모바일 대응 폰트 크기 조정 */
 }
 
 header p {
     color: #888;
     margin-bottom: 1.5rem;
+    font-size: 0.9rem;
 }
 
 /* 저장 목록 버튼 (우측 상단) */
@@ -54,7 +56,7 @@ header p {
     background: none;
     border: 1px solid #ddd;
     padding: 5px 10px;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     color: #555;
     border-radius: 15px;
     cursor: pointer;
@@ -67,16 +69,16 @@ header p {
 .category-buttons {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-    margin-bottom: 20px;
+    gap: 8px; /* 간격 좁힘 */
+    margin-bottom: 15px;
 }
 
 button {
-    background-color: #007bff; /* 파란색 버튼 */
+    background-color: #007bff;
     color: white;
     border: none;
-    padding: 12px;
-    font-size: 1rem;
+    padding: 10px; /* 패딩 약간 축소 */
+    font-size: 0.95rem;
     border-radius: 10px;
     cursor: pointer;
     transition: all 0.2s;
@@ -107,7 +109,7 @@ button:active {
 
 /* 스크롤바 스타일 */
 #result-container::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
 }
 #result-container::-webkit-scrollbar-thumb {
     background-color: #ccc;
@@ -116,7 +118,7 @@ button:active {
 
 .grid-list {
     display: grid;
-    grid-template-columns: repeat(2, 1fr); /* 2열 그리드 */
+    grid-template-columns: repeat(2, 1fr); /* 기본 PC: 2열 */
     gap: 10px;
     padding: 5px;
 }
@@ -126,13 +128,13 @@ button:active {
     background-color: white;
     border: 2px solid #e9ecef;
     border-radius: 12px;
-    padding: 15px;
+    padding: 12px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     align-items: center;
     transition: all 0.3s ease;
-    min-height: 140px;
+    min-height: 130px;
     position: relative;
 }
 
@@ -155,6 +157,10 @@ button:active {
     color: #999;
     margin-bottom: 10px;
     word-break: break-all;
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* 주소 2줄 제한 */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .btn-group {
@@ -165,8 +171,8 @@ button:active {
 
 .action-btn {
     flex: 1;
-    padding: 5px;
-    font-size: 0.8rem;
+    padding: 8px;
+    font-size: 0.85rem;
     border-radius: 5px;
     border: none;
     cursor: pointer;
@@ -193,7 +199,7 @@ button:active {
 .restaurant-item.active {
     background-color: #e7f5ff;
     border-color: #007bff;
-    transform: scale(1.05);
+    transform: scale(1.02); /* 모바일에서 너무 커지지 않게 조정 */
     box-shadow: 0 0 15px rgba(0, 123, 255, 0.5);
     z-index: 5;
 }
@@ -203,7 +209,7 @@ button:active {
     background-color: #007bff;
     color: white;
     border-color: #0056b3;
-    transform: scale(1.1);
+    transform: scale(1.05);
     box-shadow: 0 0 20px rgba(0, 123, 255, 0.7);
     z-index: 10;
 }
@@ -224,7 +230,7 @@ button:active {
 .random-btn {
     width: 100%;
     padding: 15px;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     background-color: #007bff;
 }
 
@@ -261,9 +267,89 @@ button:active {
 .close-btn {
     background-color: #868e96;
     margin-top: 15px;
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    color: white;
+    border: none;
 }
 
 /* 당첨 모달 특별 스타일 */
 .winner-content {
     border: 3px solid #007bff;
+}
+
+/* ==========================================
+   모바일 반응형 (Mobile Responsive)
+   ========================================== */
+@media (max-width: 600px) {
+    body {
+        padding: 10px; /* 패딩 축소 */
+        background-color: #fff; /* 모바일은 흰 배경 */
+    }
+
+    .container {
+        padding: 1.5rem 1rem; /* 내부 여백 축소 */
+        height: 95vh; /* 높이 조금 더 확보 */
+        border-radius: 15px;
+        box-shadow: none; /* 그림자 제거 (깔끔하게) */
+    }
+
+    header h1 {
+        font-size: 1.3rem;
+    }
+
+    .category-buttons button {
+        padding: 8px 4px;
+        font-size: 0.9rem;
+    }
+
+    /* 2열 -> 1열 변경 (가로로 꽉 차게) */
+    .grid-list {
+        grid-template-columns: 1fr; 
+    }
+
+    .restaurant-item {
+        flex-direction: row; /* 가로 배치 */
+        align-items: center;
+        text-align: left;
+        padding: 10px;
+        min-height: auto;
+        gap: 10px;
+    }
+
+    .restaurant-info {
+        flex-grow: 1;
+    }
+    
+    /* 구조 변경에 따른 내부 요소 정렬 */
+    .restaurant-name {
+        margin-bottom: 2px;
+        font-size: 1rem;
+    }
+    .restaurant-meta {
+        font-size: 0.75rem;
+        margin-bottom: 2px;
+    }
+    .restaurant-address {
+        display: none; /* 공간 부족 시 주소 숨김 (선택 사항) 또는 1줄 */
+    }
+
+    /* 버튼 그룹 스타일 변경 */
+    .btn-group {
+        width: auto;
+        flex-direction: column;
+        gap: 3px;
+        min-width: 70px;
+    }
+    
+    .action-btn {
+        padding: 6px 10px;
+        font-size: 0.75rem;
+    }
+
+    /* 당첨 팝업 */
+    #winner-message {
+        font-size: 1.1rem;
+    }
 }

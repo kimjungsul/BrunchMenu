@@ -83,14 +83,18 @@ function executeSearch(lat, lng, keyword) {
         location: new kakao.maps.LatLng(lat, lng),
         radius: 1000, // 1km 반경
         sort: kakao.maps.services.SortBy.DISTANCE,
-        size: 10 
+        size: 15 // 최대 개수(15)로 가져와서 섞음
     };
 
     ps.keywordSearch(keyword, (data, status, pagination) => {
         loadingEl.classList.add('hidden');
 
         if (status === kakao.maps.services.Status.OK) {
-            currentRestaurants = data.map(place => ({
+            // [수정] 데이터를 랜덤하게 섞은 후 상위 10개만 선택
+            const shuffledData = data.sort(() => 0.5 - Math.random());
+            const selectedData = shuffledData.slice(0, 10);
+
+            currentRestaurants = selectedData.map(place => ({
                 id: place.id, // 고유 ID 저장
                 name: place.place_name,
                 category: place.category_name.split('>').pop().trim(),
@@ -126,18 +130,20 @@ function displayRestaurants(restaurants) {
             li.className = 'restaurant-item';
             li.id = `item-${index}`;
             
-            // HTML 구성
+            // HTML 구성 (CSS Flex 구조에 맞게 변경)
             li.innerHTML = `
-                <div class="restaurant-name">${place.name}</div>
-                <div class="restaurant-meta">
-                    <span>${place.category}</span> | 
-                    <span>${place.distance}</span>
+                <div class="restaurant-info" style="flex:1; width:100%;">
+                    <div class="restaurant-name">${place.name}</div>
+                    <div class="restaurant-meta">
+                        <span>${place.category}</span> | 
+                        <span>${place.distance}</span>
+                    </div>
+                    <div class="restaurant-address">${place.address}</div>
                 </div>
-                <div class="restaurant-address">${place.address}</div>
                 
                 <div class="btn-group">
-                    <a href="${place.url}" target="_blank" class="action-btn map-btn">지도 보기</a>
-                    <button class="action-btn save-btn" onclick="saveRestaurant('${place.id}')">⭐ 저장</button>
+                    <a href="${place.url}" target="_blank" class="action-btn map-btn">지도</a>
+                    <button class="action-btn save-btn" onclick="saveRestaurant('${place.id}')">저장</button>
                 </div>
             `;
             listEl.appendChild(li);
