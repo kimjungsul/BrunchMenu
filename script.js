@@ -286,6 +286,20 @@ function closeWinnerModal() {
 }
 
 // =======================
+// 연출용 모달 (두구두구)
+// =======================
+function showDrumroll(callback) {
+    const modal = document.getElementById('drumroll-modal');
+    modal.classList.remove('hidden');
+    
+    // 3초 후 자동으로 닫히고 콜백 실행
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        if (callback) callback();
+    }, 3000);
+}
+
+// =======================
 // 랜덤 추첨 기능
 // =======================
 function startRandomSelection() {
@@ -334,9 +348,12 @@ function selectFinalWinner(items) {
     winnerItem.classList.add('selected');
     winnerItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-    // 0.5초 뒤에 팝업 띄우기
+    // [수정] 연출 모달 먼저 보여주고 -> 당첨 팝업
+    // 0.5초 딜레이 후 연출 시작
     setTimeout(() => {
-        showWinnerModal(winnerData);
+        showDrumroll(() => {
+            showWinnerModal(winnerData);
+        });
     }, 500);
 }
 
