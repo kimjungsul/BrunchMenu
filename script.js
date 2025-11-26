@@ -154,6 +154,56 @@ function displayRestaurants(restaurants) {
 }
 
 // =======================
+// 카테고리 랜덤 추첨 기능
+// =======================
+function pickRandomCategory() {
+    const categories = ["한식", "중식", "일식", "양식"];
+    const buttons = {
+        "한식": document.getElementById('btn-korean'),
+        "중식": document.getElementById('btn-chinese'),
+        "일식": document.getElementById('btn-japanese'),
+        "양식": document.getElementById('btn-western')
+    };
+    
+    const randomBtn = document.getElementById('btn-random-cat');
+    if (randomBtn) randomBtn.disabled = true;
+
+    let count = 0;
+    const maxCount = 15; // 15번 깜빡임
+    const speed = 100;
+
+    // 애니메이션
+    const interval = setInterval(() => {
+        // 모든 버튼 스타일 초기화
+        Object.values(buttons).forEach(btn => {
+            btn.style.transform = "scale(1)";
+            btn.style.boxShadow = "none";
+            btn.style.backgroundColor = "#007bff";
+        });
+
+        const randomCat = categories[Math.floor(Math.random() * categories.length)];
+        const targetBtn = buttons[randomCat];
+
+        // 하이라이트 효과
+        targetBtn.style.transform = "scale(1.1)";
+        targetBtn.style.backgroundColor = "#ff6b6b";
+        targetBtn.style.boxShadow = "0 0 15px rgba(255, 107, 107, 0.6)";
+
+        count++;
+
+        if (count >= maxCount) {
+            clearInterval(interval);
+            if (randomBtn) randomBtn.disabled = false;
+            
+            // 최종 선택된 카테고리로 로딩 실행
+            setTimeout(() => {
+               loadRestaurants(randomCat); 
+            }, 300);
+        }
+    }, speed);
+}
+
+// =======================
 // 저장 기능 (LocalStorage)
 // =======================
 function saveRestaurant(placeId) {

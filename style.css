@@ -95,6 +95,20 @@ button:active {
     transform: translateY(0);
 }
 
+/* 카테고리 랜덤 버튼 스타일 */
+#btn-random-cat {
+    background: linear-gradient(45deg, #845ef7, #b197fc); /* 그라데이션 효과 */
+    color: white;
+    grid-column: span 4; /* 4칸 차지 */
+    margin-top: 5px;
+    font-size: 1rem;
+}
+#btn-random-cat:hover {
+    background: linear-gradient(45deg, #7048e8, #9775fa);
+    transform: translateY(-2px);
+}
+
+
 /* 로딩 및 결과 영역 */
 .hidden {
     display: none !important;
@@ -302,6 +316,10 @@ button:active {
     .category-buttons button {
         padding: 8px 4px;
         font-size: 0.9rem;
+    }
+    
+    #btn-random-cat {
+        font-size: 0.9rem; /* 모바일에서 글씨 크기 조정 */
     }
 
     /* 2열 -> 1열 변경 (가로로 꽉 차게) */

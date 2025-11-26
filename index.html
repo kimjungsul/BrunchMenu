@@ -17,10 +17,11 @@
 
         <!-- 카테고리 버튼 영역 -->
         <div class="category-buttons">
-            <button onclick="loadRestaurants('한식')">한식</button>
-            <button onclick="loadRestaurants('중식')">중식</button>
-            <button onclick="loadRestaurants('양식')">양식</button>
-            <button onclick="loadRestaurants('일식')">일식</button>
+            <button id="btn-korean" onclick="loadRestaurants('한식')">한식</button>
+            <button id="btn-chinese" onclick="loadRestaurants('중식')">중식</button>
+            <button id="btn-western" onclick="loadRestaurants('양식')">양식</button>
+            <button id="btn-japanese" onclick="loadRestaurants('일식')">일식</button>
+            <button id="btn-random-cat" onclick="pickRandomCategory()" style="grid-column: span 4; background-color: #845ef7; margin-top: 5px;">❓ 메뉴도 못 고르겠다면? (랜덤)</button>
         </div>
 
         <div id="loading" class="hidden">
